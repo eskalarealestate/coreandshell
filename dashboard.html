@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Torre Corporativa · Análisis de viabilidad</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:            #0d0f14;
+    --fg:            #e4e8f0;
+    --muted:         #6b7585;
+    --border:        #1e2330;
+    --border-strong: #2a3040;
+    --card:          #111520;
+    --card-el:       #151a26;
+    --sidebar:       #0f1219;
+    --primary:       #3b72d9;
+    --primary-bg:    rgba(59,114,217,.12);
+    --positive:      #3dba70;
+    --warning:       #d9a13b;
+    --danger:        #d94f4f;
+    --secondary:     #1a2035;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Topbar ── */
+  header {
+    position: sticky; top: 0; z-index: 30;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,15,20,.88);
+    backdrop-filter: blur(12px);
+  }
+  .topbar-inner {
+    max-width: 1600px; margin: 0 auto;
+    display: flex; align-items: center; gap: 12px;
+    height: 56px; padding: 0 24px;
+  }
+  #menu-btn {
+    display: none; width: 36px; height: 36px;
+    place-items: center; border-radius: 6px;
+    border: 1px solid var(--border); background: none;
+    color: var(--muted); cursor: pointer;
+  }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--primary-bg); color: var(--primary);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .logo-text h1 { font-size: 15px; font-weight: 600; letter-spacing: -.02em; }
+  .logo-text p  { font-size: 12px; color: var(--muted); }
+  .tab-nav {
+    margin-left: auto; display: flex; gap: 4px;
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 8px; padding: 4px;
+  }
+  .tab-btn {
+    padding: 6px 12px; border-radius: 6px; border: none;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background .15s, color .15s;
+    background: none; color: var(--muted);
+  }
+  .tab-btn.active { background: var(--primary); color: #fff; }
+
+  /* ── Layout ── */
+  .layout { max-width: 1600px; margin: 0 auto; display: flex; }
+
+  /* ── Sidebar ── */
+  aside {
+    position: sticky; top: 56px;
+    height: calc(100vh - 56px);
+    width: 260px; flex-shrink: 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--sidebar);
+    padding: 24px 20px;
+  }
+  aside h2 {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted);
+  }
+  aside > p { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stepper-group { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+  .stepper { display: flex; flex-direction: column; gap: 6px; }
+  .stepper-row {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 12px;
+  }
+  .stepper label { font-size: 13px; font-weight: 500; }
+  .stepper-controls { display: flex; align-items: center; gap: 6px; }
+  .step-btn {
+    width: 32px; height: 32px; border-radius: 6px;
+    border: 1px solid var(--border); background: none;
+    color: var(--muted); cursor: pointer; display: grid; place-items: center;
+    font-size: 16px; transition: color .15s;
+  }
+  .step-btn:hover { color: var(--fg); }
+  .step-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .step-val {
+    width: 32px; text-align: center;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 16px; font-weight: 700; color: var(--primary);
+  }
+  .stepper-sub { font-family: monospace; font-size: 11px; color: var(--muted); }
+  .divider { height: 1px; background: var(--border); margin: 8px 0; }
+  .summary-card {
+    border: 1px solid var(--border); background: var(--card-el);
+    border-radius: 8px; padding: 12px;
+  }
+  .summary-card .label {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+  .summary-grid .item-label { font-size: 10px; color: var(--muted); }
+  .summary-grid .item-val {
+    font-family: monospace; font-size: 14px; font-weight: 700;
+  }
+  .summary-formula {
+    margin-top: 8px; border-radius: 6px;
+    background: rgba(255,255,255,.04); padding: 6px 10px;
+    font-family: monospace; font-size: 11px; color: var(--muted);
+  }
+
+  /* ── Main ── */
+  main { flex: 1; min-width: 0; padding: 24px 32px; }
+  .dashboard { display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── Floor Chart ── */
+  .chart-card {
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 12px; padding: 20px;
+  }
+  .chart-header {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 20px;
+  }
+  .chart-header h2 { font-size: 15px; font-weight: 600; }
+  .chart-header p  { font-size: 12px; color: var(--muted); }
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 12px 24px;
+    font-size: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .chart-rows  { display: flex; flex-direction: column; gap: 3px; }
+  .floor-row   { display: flex; align-items: center; gap: 12px; }
+  .floor-label {
+    width: 48px; flex-shrink: 0; text-align: right;
+    font-family: monospace; font-size: 12px;
+  }
+  .bar-wrap    { flex: 1; position: relative; height: 28px; border-radius: 5px; overflow: hidden; transition: width .5s; }
+  .bar-inner   {
+    position: absolute; inset-block: 0; left: 0;
+    display: flex; align-items: center;
+    padding: 0 8px; border-radius: 5px; overflow: hidden;
+    transition: width .5s;
+  }
+  .bar-inner span { font-family: monospace; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .bar-gross-label {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    font-family: monospace; font-size: 11px; color: rgba(228,232,240,.45);
+    white-space: nowrap;
+  }
+  .floor-right {
+    width: 112px; flex-shrink: 0;
+    font-family: monospace; font-size: 12px; color: var(--muted);
+  }
+  .grade-line {
+    display: flex; align-items: center; gap: 8px;
+    margin: 4px 0;
+  }
+  .grade-line .line {
+    flex: 1; border-top: 1px dashed rgba(255,255,255,.15);
+  }
+  .grade-line span {
+    font-family: monospace; font-size: 10px; color: var(--muted); white-space: nowrap;
+  }
+  .chart-axis {
+    display: flex; justify-content: space-between;
+    margin-top: 12px;
+    font-family: monospace; font-size: 10px; color: rgba(107,117,133,.5);
+  }
+
+  /* ── KPI Row ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .hero-card {
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 12px; padding: 20px;
+  }
+  .hero-card .card-label { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .hero-val {
+    font-family: monospace; font-size: 38px; font-weight: 700; line-height: 1;
+    margin-top: 12px;
+  }
+  .hero-unit { font-size: 13px; color: var(--muted); font-family: sans-serif; font-weight: 400; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 12px; border-radius: 6px; padding: 2px 6px;
+    font-size: 12px; font-weight: 500; width: fit-content;
+  }
+  .badge-pos { background: rgba(61,186,112,.12); color: var(--positive); }
+  .badge-warn { background: rgba(217,161,59,.12); color: var(--warning); }
+  .small-card {
+    display: flex; flex-direction: column; gap: 8px;
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 12px; padding: 16px;
+  }
+  .small-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--secondary); display: grid; place-items: center;
+    color: var(--muted);
+  }
+  .small-val {
+    font-family: monospace; font-size: 28px; font-weight: 700; line-height: 1;
+    margin-top: 4px;
+  }
+  .small-unit { font-size: 13px; color: var(--muted); font-family: sans-serif; font-weight: 400; }
+  .small-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Ratio Row ── */
+  .ratio-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .ratio-card {
+    display: flex; flex-direction: column; gap: 12px;
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 12px; padding: 16px;
+  }
+  .ratio-card-header { display: flex; align-items: center; justify-content: space-between; }
+  .ratio-card-header span { font-size: 13px; font-weight: 500; }
+  .ratio-badge {
+    border-radius: 6px; padding: 2px 6px;
+    font-size: 11px; font-weight: 500;
+  }
+  .ratio-val { font-family: monospace; font-size: 28px; font-weight: 700; line-height: 1; }
+  .ratio-sub { font-size: 13px; color: var(--muted); }
+  .progress-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .progress-track {
+    height: 6px; border-radius: 99px; background: var(--border-strong); overflow: hidden;
+  }
+  .progress-bar { height: 100%; border-radius: 99px; transition: width .5s; }
+  .progress-labels {
+    display: flex; justify-content: space-between;
+    font-family: monospace; font-size: 10px; color: rgba(107,117,133,.6);
+  }
+  .ratio-note { font-size: 11px; color: var(--muted); }
+
+  /* status colors */
+  .c-pos  { color: var(--positive); }
+  .c-warn { color: var(--warning); }
+  .c-danger { color: var(--danger); }
+  .bg-pos  { background: rgba(61,186,112,.12); color: var(--positive); }
+  .bg-warn { background: rgba(217,161,59,.12);  color: var(--warning); }
+  .bg-danger { background: rgba(217,79,79,.12); color: var(--danger); }
+  .bar-pos  { background: var(--positive); }
+  .bar-warn { background: var(--warning); }
+  .bar-danger { background: var(--danger); }
+
+  /* ── Mobile overlay sidebar ── */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; z-index: 40;
+    background: rgba(13,15,20,.7); backdrop-filter: blur(4px);
+  }
+  .sidebar-drawer {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 280px; max-width: 85vw;
+    background: var(--sidebar); border-right: 1px solid var(--border);
+    padding: 20px; overflow-y: auto;
+    transform: translateX(-100%); transition: transform .3s;
+  }
+  .sidebar-overlay.open { display: block; }
+  .sidebar-overlay.open .sidebar-drawer { transform: translateX(0); }
+  .drawer-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .drawer-top span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .close-btn {
+    width: 32px; height: 32px; border-radius: 6px;
+    border: 1px solid var(--border); background: none;
+    color: var(--muted); cursor: pointer; display: grid; place-items: center; font-size: 18px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    aside { display: none; }
+    #menu-btn { display: grid; }
+    .floor-right { display: none; }
+  }
+  @media (max-width: 768px) {
+    main { padding: 16px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .ratio-grid { grid-template-columns: 1fr; }
+    .hero-val { font-size: 28px; }
+    .chart-header { flex-direction: column; }
+  }
+  @media (min-width: 1024px) {
+    .kpi-grid {
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .kpi-hero { grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header>
+  <div class="topbar-inner">
+    <button id="menu-btn" onclick="openSidebar()" aria-label="Abrir parámetros">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="logo-icon">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+    </div>
+    <div class="logo-text">
+      <h1>Torre Corporativa</h1>
+      <p>Santo Domingo · Análisis de viabilidad</p>
+    </div>
+    <nav class="tab-nav">
+      <button class="tab-btn active" onclick="setTab('parqueos',this)">Parqueos</button>
+      <button class="tab-btn" onclick="setTab('presupuesto',this)">Presupuesto</button>
+    </nav>
+  </div>
+</header>
+
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebarIfOutside(event)">
+  <aside class="sidebar-drawer" id="drawer">
+    <div class="drawer-top">
+      <span>Parámetros</span>
+      <button class="close-btn" onclick="closeSidebar()">×</button>
+    </div>
+    <div id="drawer-body"></div>
+  </aside>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Desktop sidebar -->
+  <aside id="desktop-sidebar">
+    <h2>Configuración de niveles</h2>
+    <p style="margin-top:4px">Ajusta la cantidad de pisos por tipo de uso.</p>
+    <div id="sidebar-body"></div>
+  </aside>
+
+  <main>
+    <div class="dashboard">
+      <div id="chart-section"></div>
+      <div id="kpi-section"></div>
+      <div id="ratio-section"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────
+const REAL = {
+  M2_SOTANO: 2316, M2_RASANTE: 1900,
+  M2_OFICINA_BRUTO: 1380, M2_OFICINA_NETO: 1140,
+  M2_CROWN_BRUTO: 1380, M2_CROWN_NETO: 337,
+  M2_LOBBY: 2316,
+  PLAZAS_SOTANO: 51, PLAZAS_RASANTE: 41, PLAZAS_VISITA: 35,
+  RESTITUTION: 160,
+}
+
+let levels = { officeLevels: 6, structuredParkingLevels: 5, undergroundParkingLevels: 3 }
+
+// ── Data ───────────────────────────────────────────────────────
+function generateFloors(l) {
+  const floors = []
+  floors.push({ id:'crown', label:'N13 Crown', use:'Crown / Eventos', grossArea:REAL.M2_CROWN_BRUTO, netArea:REAL.M2_CROWN_NETO })
+  const topOff = 12
+  for (let i=0; i<l.officeLevels; i++) {
+    const lvl = topOff - i
+    floors.push({ id:`office-${lvl}`, label:`N${String(lvl).padStart(2,'0')}`, use:'Oficinas', grossArea:REAL.M2_OFICINA_BRUTO, netArea:REAL.M2_OFICINA_NETO })
+  }
+  for (let i=l.structuredParkingLevels; i>=1; i--) {
+    floors.push({ id:`pk-${i}`, label:`N${String(i+1).padStart(2,'0')}`, use:'Parqueo estructurado', grossArea:REAL.M2_RASANTE, netArea:0, spaces:REAL.PLAZAS_RASANTE })
+  }
+  floors.push({ id:'pb', label:'N01', use:'Lobby + Visitas', grossArea:REAL.M2_LOBBY, netArea:0, spaces:REAL.PLAZAS_VISITA, isGroundLevel:true })
+  for (let i=1; i<=l.undergroundParkingLevels; i++) {
+    floors.push({ id:`s-${i}`, label:`N-${String(i).padStart(2,'0')}`, use:'Parqueo subterráneo', grossArea:REAL.M2_SOTANO, netArea:0, spaces:REAL.PLAZAS_SOTANO, isBelowGrade:true })
+  }
+  return floors
+}
+
+function calcTotals(floors, l) {
+  const totalSpaces = l.structuredParkingLevels*REAL.PLAZAS_RASANTE + l.undergroundParkingLevels*REAL.PLAZAS_SOTANO
+  const commercializable = Math.max(0, totalSpaces - REAL.RESTITUTION)
+  const rentable = floors.reduce((s,f)=>s+f.netArea,0)
+  const gross    = floors.reduce((s,f)=>s+f.grossArea,0)
+  const ratio    = commercializable>0 ? Math.round(rentable/commercializable) : 0
+  return { totalSpaces, restitution:REAL.RESTITUTION, commercializable, visitSpaces:REAL.PLAZAS_VISITA, rentable, gross, ratio, efficiency: rentable>0&&gross>0?(rentable/gross)*100:0 }
+}
+
+function isParking(use) { return use==='Parqueo estructurado'||use==='Parqueo subterráneo' }
+
+// ── Colors ─────────────────────────────────────────────────────
+const USE_COLORS = {
+  'Oficinas':             { bar:'#1E3A6E', inner:'#3B72D9', text:'#fff' },
+  'Crown / Eventos':      { bar:'#2B1D6E', inner:'#6B5FD9', text:'#fff' },
+  'Parqueo estructurado': { bar:'#1A3A1A', inner:'#3A7A3A', text:'#fff' },
+  'Parqueo subterráneo':  { bar:'#142A14', inner:'#2D5C2D', text:'#bfffbf' },
+  'Lobby + Visitas':      { bar:'#2A2A3A', inner:'#50566A', text:'#e0e4f0' },
+}
+const USE_LABEL = {
+  'Oficinas':'Oficinas','Crown / Eventos':'Crown N13',
+  'Parqueo estructurado':'Parqueo rasante','Parqueo subterráneo':'Parqueo soterrado','Lobby + Visitas':'Lobby + Visitas',
+}
+
+function fmt(n) { return n.toLocaleString('es-DO') }
+function barLabel(f) {
+  if (isParking(f.use)) return `${f.spaces??0} plz`
+  if (f.use==='Lobby + Visitas') return `~${f.spaces} visita · ${fmt(f.grossArea)} m²`
+  if (f.netArea>0) return `${fmt(f.netArea)} m² neto`
+  return `${fmt(f.grossArea)} m²`
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function render() {
+  const floors = generateFloors(levels)
+  const t = calcTotals(floors, levels)
+  renderSidebar()
+  renderChart(floors)
+  renderKpi(floors, t)
+  renderRatio(t)
+}
+
+// ── Sidebar ────────────────────────────────────────────────────
+function sidebarHTML() {
+  const totalSpaces = levels.structuredParkingLevels*REAL.PLAZAS_RASANTE + levels.undergroundParkingLevels*REAL.PLAZAS_SOTANO
+  const commercial  = Math.max(0, totalSpaces - REAL.RESTITUTION)
+  const rentable    = levels.officeLevels*REAL.M2_OFICINA_NETO + REAL.M2_CROWN_NETO
+  const fields = [
+    { key:'officeLevels', label:'Pisos de oficinas', sub:`${fmt(levels.officeLevels*REAL.M2_OFICINA_NETO+REAL.M2_CROWN_NETO)} m² rentables`, min:0, max:14 },
+    { key:'structuredParkingLevels', label:'Parqueo rasante', sub:`${levels.structuredParkingLevels*REAL.PLAZAS_RASANTE} plazas · ${fmt(levels.structuredParkingLevels*REAL.M2_RASANTE)} m²`, min:0, max:10 },
+    { key:'undergroundParkingLevels', label:'Parqueo soterrado', sub:`${levels.undergroundParkingLevels*REAL.PLAZAS_SOTANO} plazas · ${fmt(levels.undergroundParkingLevels*REAL.M2_SOTANO)} m²`, min:0, max:8 },
+  ]
+  return `
+    <div class="stepper-group">
+      ${fields.map(f=>`
+        <div class="stepper">
+          <div class="stepper-row">
+            <label>${f.label}</label>
+            <div class="stepper-controls">
+              <button class="step-btn" onclick="step('${f.key}',-1)" ${levels[f.key]<=f.min?'disabled':''}>−</button>
+              <span class="step-val">${levels[f.key]}</span>
+              <button class="step-btn" onclick="step('${f.key}',1)" ${levels[f.key]>=f.max?'disabled':''}>+</button>
+            </div>
+          </div>
+          <div class="stepper-sub">${f.sub}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="divider" style="margin-top:16px"></div>
+    <div class="summary-card" style="margin-top:12px">
+      <div class="label">Resumen</div>
+      <div class="summary-grid">
+        <div><div class="item-label">Área rentable</div><div class="item-val">${fmt(rentable)} m²</div></div>
+        <div><div class="item-label">Total plazas</div><div class="item-val">${totalSpaces}</div></div>
+        <div><div class="item-label">Restitución</div><div class="item-val c-danger">−${REAL.RESTITUTION}</div></div>
+        <div><div class="item-label">Comercializables</div><div class="item-val c-pos">${commercial}</div></div>
+      </div>
+      <div class="summary-formula">${totalSpaces} − ${REAL.RESTITUTION} rest. = <span class="c-pos" style="font-weight:700">${commercial} comerc.</span></div>
+    </div>
+    <div class="summary-card" style="margin-top:12px">
+      <p style="font-size:12px;color:var(--muted)">Cada cambio actualiza el perfil, KPIs y ratios en tiempo real.</p>
+    </div>
+  `
+}
+
+function renderSidebar() {
+  const html = sidebarHTML()
+  document.getElementById('sidebar-body').innerHTML = html
+  document.getElementById('drawer-body').innerHTML = html
+}
+
+function step(key, delta) {
+  const mins = { officeLevels:0, structuredParkingLevels:0, undergroundParkingLevels:0 }
+  const maxs = { officeLevels:14, structuredParkingLevels:10, undergroundParkingLevels:8 }
+  levels[key] = Math.max(mins[key], Math.min(maxs[key], levels[key]+delta))
+  render()
+}
+
+// ── Chart ──────────────────────────────────────────────────────
+function renderChart(floors) {
+  const maxGross = Math.max(...floors.map(f=>f.grossArea))
+  const uses = [...new Set(floors.map(f=>f.use))]
+
+  const legend = uses.map(u=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${USE_COLORS[u].inner}"></div>
+      <span>${USE_LABEL[u]}</span>
+    </div>`).join('')
+
+  const rows = floors.map(f=>{
+    const grossPct  = (f.grossArea/maxGross)*100
+    const parking   = isParking(f.use)
+    const isLobby   = f.use==='Lobby + Visitas'
+    const innerPct  = parking ? 100 : isLobby ? 60 : f.grossArea>0?(f.netArea/f.grossArea)*100:0
+    const c = USE_COLORS[f.use]
+    const labelColor = f.isBelowGrade ? '#6A8A6A' : '#8a96a8'
+    const rightLabel = parking ? `${f.spaces} plz / nivel` : isLobby ? `${fmt(f.grossArea)} m²` : f.netArea>0?`${fmt(f.netArea)} m² neto`:'—'
+    const grossLabel = (!parking&&!isLobby) ? `<span class="bar-gross-label">${fmt(f.grossArea)} bruto</span>` : ''
+
+    const gradeLine = f.isGroundLevel ? `
+      <div class="grade-line">
+        <div class="line"></div>
+        <span>N.P.T. ±0.00</span>
+        <div class="line"></div>
+      </div>` : ''
+
+    return `${gradeLine}
+    <div class="floor-row">
+      <span class="floor-label" style="color:${labelColor}">${f.label}</span>
+      <div class="bar-wrap" style="width:${grossPct}%;background:${c.bar};opacity:${f.isBelowGrade?.8:1}">
+        <div class="bar-inner" style="width:${innerPct}%;background:${c.inner}">
+          <span style="color:${c.text}">${barLabel(f)}</span>
+        </div>
+        ${grossLabel}
+      </div>
+      <span class="floor-right">${rightLabel}</span>
+    </div>`
+  }).join('')
+
+  document.getElementById('chart-section').innerHTML = `
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h2>Perfil del edificio</h2>
+          <p>Barra exterior = área bruta · interior = área neta rentable · parqueos = plazas</p>
+        </div>
+        <div class="chart-legend">${legend}</div>
+      </div>
+      <div class="chart-rows">${rows}</div>
+      <div class="chart-axis">
+        <span>0 m²</span><span>1,000</span><span>1,500</span><span>2,000</span><span>${fmt(maxGross)} m²</span>
+      </div>
+    </div>`
+}
+
+// ── KPI ────────────────────────────────────────────────────────
+function renderKpi(floors, t) {
+  const ratioTag = t.ratio<=25
+    ? { text:'Superior a norma MIVED', pos:true }
+    : t.ratio<=40
+      ? { text:'Sobre competencia SD', pos:true }
+      : { text:'Bajo ratio de mercado', pos:false }
+
+  const effOk = t.efficiency >= 80
+
+  function heroCard(label, value, unit, badge, badgePos, colClass='') {
+    return `
+      <div class="hero-card${colClass?' '+colClass:''}">
+        <span class="card-label">${label}</span>
+        <div style="margin-top:12px;display:flex;align-items:flex-end;gap:8px">
+          <span class="hero-val ${colClass.includes('kpi-hero')?'c-pos':''}">${value}</span>
+          ${unit?`<span class="hero-unit" style="margin-bottom:4px">${unit}</span>`:''}
+        </div>
+        ${badge?`<div class="hero-badge ${badgePos?'badge-pos':'badge-warn'}">
+          ${badgePos?'↑':'↓'} ${badge}
+        </div>`:''}
+      </div>`
+  }
+
+  function smallCard(icon, label, value, unit, toneClass) {
+    return `
+      <div class="small-card">
+        <div class="small-icon">${icon}</div>
+        <div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <span class="small-val ${toneClass||''}">${value}</span>
+            ${unit?`<span class="small-unit">${unit}</span>`:''}
+          </div>
+          <div class="small-label">${label}</div>
+        </div>
+      </div>`
+  }
+
+  const carIcon = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="15" cy="17" r="2"/></svg>`
+  const bldIcon = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>`
+  const lyrsIcon= `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`
+
+  document.getElementById('kpi-section').innerHTML = `
+    <div class="kpi-grid">
+      ${heroCard('Área rentable total', `${(t.rentable/1000).toFixed(2)}K`, 'm²', `eficiencia ${t.efficiency.toFixed(0)}% bruto/neto`, effOk, 'kpi-hero')}
+      ${heroCard('Plazas comercializables', t.commercializable, 'plazas', ratioTag.text, ratioTag.pos, 'kpi-hero')}
+      ${smallCard(carIcon, 'Total plazas', t.totalSpaces, '', '')}
+      ${smallCard(carIcon, 'Restitución (fija)', `−${t.restitution}`, '', 'c-danger')}
+      ${smallCard(lyrsIcon, `1 plz × ${t.ratio} m² rent.`, `1×${t.ratio}`, 'm²', t.ratio<=25?'c-pos':t.ratio<=40?'':'c-warn')}
+      ${smallCard(bldIcon, 'Visitas en PB', `~${t.visitSpaces}`, 'plz', '')}
+    </div>`
+}
+
+// ── Ratio ──────────────────────────────────────────────────────
+function renderRatio(t) {
+  const ratioStatus = t.ratio<=25?'pos':t.ratio<=40?'warn':'danger'
+  const ratioPct    = Math.max(0, 100 - ((t.ratio-20)/30)*100)
+  const effStatus   = t.efficiency>=82?'pos':t.efficiency>=75?'warn':'danger'
+  const effPct      = (t.efficiency/90)*100
+  const commStatus  = t.commercializable>=200?'pos':t.commercializable>=100?'warn':'danger'
+  const commPct     = (t.commercializable/300)*100
+
+  function ratioCard(label, actual, actualSub, target, barPct, status, note) {
+    const badgeText = status==='pos'?'En meta':'Bajo meta'
+    return `
+      <div class="ratio-card">
+        <div class="ratio-card-header">
+          <span>${label}</span>
+          <span class="ratio-badge bg-${status}">${badgeText}</span>
+        </div>
+        <div>
+          <span class="ratio-val">${actual}</span>
+          ${actualSub?`<span class="ratio-sub"> ${actualSub}</span>`:''}
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div class="progress-bar bar-${status}" style="width:${Math.min(barPct,100)}%"></div>
+          </div>
+          <div class="progress-labels"><span>0</span><span>meta: ${target}</span></div>
+        </div>
+        ${note?`<p class="ratio-note">${note}</p>`:''}
+      </div>`
+  }
+
+  document.getElementById('ratio-section').innerHTML = `
+    <div class="ratio-grid">
+      ${ratioCard('Ratio de parqueo',`1 × ${t.ratio}`,'m² / plz','1 × 25 m² (MIVED)',ratioPct,ratioStatus,'Competencia SD: 1 × 40–50 m² · Este proyecto supera ambos')}
+      ${ratioCard('Eficiencia por piso de oficinas',`${t.efficiency.toFixed(1)}%`,'','82%',effPct,effStatus,`${fmt(t.rentable)} m² netos de ${fmt(t.gross)} m² brutos`)}
+      ${ratioCard('Plazas comercializables',t.commercializable,`de ${t.totalSpaces} totales`,'258 objetivo',commPct,commStatus,`${t.totalSpaces} totales − ${t.restitution} restitución = ${t.commercializable} comercializables`)}
+    </div>`
+}
+
+// ── Tab ────────────────────────────────────────────────────────
+function setTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'))
+  btn.classList.add('active')
+}
+
+// ── Mobile sidebar ─────────────────────────────────────────────
+function openSidebar()  { document.getElementById('overlay').classList.add('open') }
+function closeSidebar() { document.getElementById('overlay').classList.remove('open') }
+function closeSidebarIfOutside(e) { if (e.target===document.getElementById('overlay')) closeSidebar() }
+
+// ── Init ───────────────────────────────────────────────────────
+render()
+</script>
+</body>
+</html>
