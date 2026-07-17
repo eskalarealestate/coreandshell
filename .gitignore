@@ -8,3 +8,8 @@ node_modules/
 .DS_Store
 *.zip
 dashboard/
+
+# Env
+.env
+.env.local
+.env*.local

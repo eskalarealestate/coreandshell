@@ -1,139 +1,52 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-geist-sans), 'Geist Fallback';
-  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback';
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-card-elevated: var(--card-elevated);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-positive: var(--positive);
-  --color-positive-foreground: var(--positive-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-app-bg: #f5f5f7;
+  --color-card: #ffffff;
+  --color-card-border: #ececef;
+  --color-ink: #111111;
+  --color-hairline: #e2e2e6;
+  --color-chip: #f0f0f2;
 
-  --color-bar-gross: var(--bar-gross);
-  --color-bar-net: var(--bar-net);
-
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-}
-
-:root {
-  --background: #0f1824;
-  --foreground: #e7ecf3;
-
-  --card: #16202e;
-  --card-foreground: #e7ecf3;
-  --card-elevated: #1b2737;
-
-  --popover: #16202e;
-  --popover-foreground: #e7ecf3;
-
-  --primary: #5b8af5;
-  --primary-foreground: #07101c;
-
-  --secondary: #1b2737;
-  --secondary-foreground: #e7ecf3;
-
-  --muted: #1b2737;
-  --muted-foreground: #8a96a8;
-
-  --accent: #1f2c3e;
-  --accent-foreground: #e7ecf3;
-
-  --destructive: #f5615c;
-
-  --positive: #2ecc82;
-  --positive-foreground: #06140d;
-
-  --warning: #f5a623;
-  --warning-foreground: #1a1204;
-
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --input: #1b2737;
-  --ring: #5b8af5;
-
-  --bar-gross: #2a3a52;
-  --bar-net: #5b8af5;
-
-  --sidebar: #111c29;
-  --sidebar-foreground: #e7ecf3;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-
-  --radius: 0.625rem;
+  --color-accent-blue: #3f6fd6;
+  --color-accent-orange: #d6552f;
+  --color-accent-green: #2fa84f;
+  --color-accent-cyan: #1ea0de;
+  --color-accent-yellow: #f7c948;
 }
 
 @layer base {
   * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
+    box-sizing: border-box;
   }
   html {
     @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-app-bg text-ink antialiased;
+  }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+  input {
+    font-family: inherit;
   }
 }
 
-/* Compact range input styled for the dark dashboard */
-.ds-range {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--border-strong);
-  cursor: pointer;
+.truncate-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
-.ds-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 999px;
-  background: var(--primary);
-  border: 3px solid var(--card);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-.ds-range::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 999px;
-  background: var(--primary);
-  border: 3px solid var(--card);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-.ds-range:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 4px;
+
+.no-wrap-badge {
+  white-space: nowrap;
+  flex-shrink: 0;
 }

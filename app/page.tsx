@@ -1,40 +1,31 @@
-'use client'
+import { getDayProgram } from './actions'
+import { DAY_LABELS } from '@/lib/constants'
+import { TrainingApp } from '@/components/training/TrainingApp'
 
-import { useMemo, useState } from 'react'
-import { Topbar } from '@/components/dashboard/topbar'
-import { Sidebar } from '@/components/dashboard/sidebar'
-import { FloorProfileChart } from '@/components/dashboard/floor-profile-chart'
-import { KpiRow } from '@/components/dashboard/kpi-row'
-import { RatioRow } from '@/components/dashboard/ratio-row'
-import { generateFloors, DEFAULT_LEVELS, type LevelCounts } from '@/lib/building-data'
+// Every value on this page comes from live Set/log history (Section 2) —
+// never prerender/freeze it at build time.
+export const dynamic = 'force-dynamic'
 
-export default function Page() {
-  const [tab, setTab]               = useState<'parqueos' | 'presupuesto'>('parqueos')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [levels, setLevels]         = useState<LevelCounts>(DEFAULT_LEVELS)
+export default async function Page() {
+  const initialDay = DAY_LABELS[0]
 
-  const floors = useMemo(() => generateFloors(levels), [levels])
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Topbar tab={tab} onTabChange={setTab} onMenuClick={() => setSidebarOpen(true)} />
-
-      <div className="mx-auto flex w-full max-w-[1600px]">
-        <Sidebar
-          levels={levels}
-          onLevelsChange={setLevels}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
-
-        <main className="flex-1 min-w-0 px-4 py-6 md:px-6 lg:px-8">
-          <div className="flex flex-col gap-6">
-            <FloorProfileChart floors={floors} />
-            <KpiRow floors={floors} counts={levels} />
-            <RatioRow floors={floors} counts={levels} />
-          </div>
-        </main>
+  try {
+    const initialProgram = await getDayProgram(initialDay)
+    return <TrainingApp initialDay={initialDay} initialProgram={initialProgram} />
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return (
+      <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center gap-3 px-6">
+        <div className="text-[20px] font-bold">No se pudo conectar a Supabase</div>
+        <div className="rounded-2xl border border-card-border bg-white p-4 text-[13.5px] leading-relaxed text-black/60">
+          {message}
+        </div>
+        <div className="text-[13px] leading-relaxed text-black/50">
+          Revisa <code className="rounded bg-chip px-1 py-0.5">.env.local</code> (SUPABASE_URL /
+          SUPABASE_ANON_KEY) y confirma que las migraciones en{' '}
+          <code className="rounded bg-chip px-1 py-0.5">supabase/migrations</code> ya corrieron en tu proyecto.
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 }
