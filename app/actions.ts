@@ -113,7 +113,8 @@ export async function getDayProgram(dayLabel: string): Promise<DayProgramDTO> {
   const slotStates: SlotStateDTO[] = slots.map((slot: any) => {
     const exercise = slot.exercise
     const loggedSets = setsBySlot.get(slot.id) ?? []
-    const currentWeight = resolveCurrentWeight(lastWeightBySlot.get(slot.id) ?? null, slot.starting_weight)
+    const hasLoggedSet = lastWeightBySlot.has(slot.id)
+    const currentWeight = resolveCurrentWeight(hasLoggedSet, lastWeightBySlot.get(slot.id) ?? null, slot.starting_weight)
     const weightLabel = formatWeightLabel({
       weight: currentWeight,
       unit: WEIGHT_UNIT,

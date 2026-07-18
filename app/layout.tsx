@@ -25,6 +25,13 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.png',
   },
+  other: {
+    // Next's appleWebApp.capable only emits the newer unprefixed
+    // "mobile-web-app-capable" meta tag; iOS Safari (including versions
+    // still in real use) needs the apple-prefixed one to render standalone
+    // when added to the home screen, so it's set explicitly here too.
+    'apple-mobile-web-app-capable': 'yes',
+  },
 }
 
 export const viewport: Viewport = {

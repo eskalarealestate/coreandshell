@@ -65,9 +65,23 @@ export function suggestWeightReduction(currentWeight: number): { suggestedWeight
   }
 }
 
-/** Current working weight for a slot: last logged Set if any, else the seeded starting weight. */
-export function resolveCurrentWeight(lastLoggedWeight: number | null | undefined, startingWeight: number | null): number | null {
-  if (lastLoggedWeight !== null && lastLoggedWeight !== undefined) return lastLoggedWeight
+/**
+ * Current working weight for a slot: the seeded starting_weight is used only
+ * when NO Set has ever been logged for this slot. The instant a first real
+ * Set exists, its weight is used and starting_weight is ignored completely —
+ * including when that Set's weight is legitimately null (bodyweight /
+ * bodyweight_assisted movements never carry a numeric load). This distinction
+ * requires an explicit "does a Set exist" flag rather than inferring
+ * presence from nullishness, since a real logged weight of null is a valid
+ * value, not a missing one (spec Section 2: Set history is the single source
+ * of truth — starting_weight is only ever the pre-history seed).
+ */
+export function resolveCurrentWeight(
+  hasLoggedSet: boolean,
+  lastLoggedWeight: number | null,
+  startingWeight: number | null,
+): number | null {
+  if (hasLoggedSet) return lastLoggedWeight
   return startingWeight
 }
 
